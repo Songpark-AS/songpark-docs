@@ -1,0 +1,5 @@
+name: songpark-docs
+title: Songpark Documentation
+version: 'master'
+nav:
+- modules/ROOT/nav.adoc
