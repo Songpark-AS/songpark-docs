@@ -1,0 +1,127 @@
+= Overview Songpark architecture
+
+== Full system architecture
+
+.Drawing of the overall system architecture for Songpark
+image::songpark-architecture.png[System architecture]
+
+The system so far consists of the following (partially implemented, or thought of) parts.
+
+.Platform
+Is the backend of the system. Designed to be run as multiple instances. This is the central controlling piece of the entire system.
+
+.Payment merchant
+When charging for the solution, at least one payment merchant need to be used.
+
+.PostgreSQL
+SQL database. Source of truth for all stored data.
+
+.ElastichSearch
+Database specialized in search. Gets its data from Postgres.
+
+.Scheduler
+Runs scheduled jobs from the platform. Care needs to be taken to use a Scheduler that is idempotent, as multiple instances of Platform will be running.
+
+.Cache
+Used for caching data for access between different instances of Platform. No candidate chosen yet. MemCache or Redis are good defaults.
+
+.Backoffice
+Backoffice handles administration of the system.
+
+.MQTT Broker
+The broker for MQTT, a light-weight Message Queue system that is designed for IoT.
+
+.App
+App for controlling a teleporter and interacting with other users of the system. All via Platform.
+
+.Teleporter
+A physical box that combines hardware and software. This is what is used to play music together.
+
+.Kamailio
+A SIP server that is used by the teleporters to initiate calls between each other.
+
+
+
+== Platform zoom in
+
+.Zoom in on the platform of the architecture
+image::songpark-architecture-platform.png[Platform]
+
+The platform will contain various modules over time, all responsible for different pieces of functionality.
+
+.HTTP REST API
+Standard REST API setup. Authn, authz yet to be implemented.
+
+.Synchronizer
+Responsible for initiating synchronization between PostgreSQL and ElastichSearch.
+
+.MQTT
+MQTT Client. Responsible for handling topics, publishing and subscribing. To be expanded upon.
+
+.Payment
+Module responsible for interacting with the payment merchant and making sure users have paid.
+
+
+== App zoom in
+
+.Zoom in on the app of the architecture
+image::songpark-architecture-app.png[App]
+
+.MQTT
+MQTT client. Responsible for handling topics, publishing and subscribing. To be expanded upon.
+
+.HTTP
+Responsible for making the rquests against the HTTP REST API on Platform. Handles the routing of responses to the correct event afterwards.
+
+.App DB
+Source of truth in the app. It's a big map that holds all state for the app.
+
+.Subscriptions
+A subscription listens for changes in the database, in specific places in the database. When a change occurs, anything that references (uses) the subscription for getting that data, will automatically update. This is what is primarily used to trigger updates in views.
+
+.Views
+What is visually shown in an app. Any events in the app is sent onwards as events in the app and is then handled either by Event or FX. Event/FX might then update the database, in which case any subscription that is listening to that data is then triggered, causing a re-rendering of the view.
+
+.Events
+Events handles events (ie, something happened, a user clicked, a message arrived over MQTT, etc) and updates the App DB accordingly.
+
+.FX
+FX are almost like events, with one very important difference: They can cause side effects. Side effects can mean things like loading data from Platform, or communicate with a Teleporter.
+
+== Teleporter zoom in
+
+.Zoom in on the teleporter of the architecture
+image::songpark-architecture-teleporter.png[Teleporter]
+
+The teleporter is a physical box, with associated hardware and software.
+
+The hardware is meant to be used by professional musical instruments, for plug and play over the internet. The teleporter is comprised broadly speaking of three parts: The physical hardwire required for the musical instruments, the FPGA that handles the streaming and an ARM processor running Linux that is used to communicate with the rest of the system.
+
+The gray background area is the ARM processor with Linux. The lower white background area is FPGA.
+
+
+.TPX
+The program that is used to communicate with the rest of the world and control the box. TPX handles communication with Platform as well as the App. It communicates downwards to the FPGA via a program called Bridge.
+
+.TPX MQTT
+MQTT Client. Responsible for handling topics, publishing and subscribing. To be expanded upon.
+
+.TPX IPC
+Interactive Process Communication (IPC) is responsible for talking with the Bridge. This is done via virtual serial ports.
+
+.TPX Network
+Network is responsible setting the network via the app as well as detecting loss of IP address (not being able to communicate outwards). In the event of loss of IP address, a default IP configuration is set and a webserver is booted up that you can access on that particular IP.
+
+.Updates
+Updates is responsible for updating all the programs running on the Teleporter. This includes TPX, Bridge, FPGA as well as Updates itself.
+
+.Bridge
+The Bridge program bridges the FPGA with the TPX and allows for communicating with the FPGA layer. Bridge is sometimes called SIP/BP or BP as this program is also responsible for communicating with Kamailio via SIP, in order to setup calls to other teleporters. Bridge is currently implemented in two parts, and combined into one program (currently called connect).
+
+Bridge communicates with TPX via virtual serial ports.
+
+Bridge communicates with FPGA via direct memory access.
+
+.FPGA
+The FPGA layer handles the streaming between different teleporters. As a result, it also handles all network traffic. This is transparent for the ARM based layer with Linux.
+

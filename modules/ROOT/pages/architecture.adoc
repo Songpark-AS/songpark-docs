@@ -1,0 +1,6 @@
+= Architecture
+
+The architecture of Songpark is sprawling, and spans multiple environments.
+
+- xref:architecture/overview.adoc[Overview]
+
