@@ -1,0 +1,24 @@
+= Deployment
+
+
+== Production
+
+Nothing has been setup yet.
+
+== Staging
+
+A staging server has been setup. It currently consists of platform and a MQTT server. Platform runs on k8s, while the MQTT server (for now) runs on EC2.
+
+=== Deployment process
+
+Deployments need to be written using Makefiles. This is for repeatability and removing as much as possible of the human error. Makefiles can make use of build scripts, but the Makefile should be the entry point to the entire process of deploying.
+
+https://tech.trivago.com/2019/12/20/makefiles-in-2019-why-they-still-matter/[Here is a good walkthrough of why Makefile matters].
+
+=== Build process
+
+All build scripts are stored in the deployment folder in the root of the project. The scripts to build, the order in which builds are to happen, etc are all stored there and invoked from the Makefile in the root folder.
+
+=== Secrets
+
+Secrets that are not stored with the deployment are stored in AWS, and should be injected as ENVIRONMENT VARIABLES.

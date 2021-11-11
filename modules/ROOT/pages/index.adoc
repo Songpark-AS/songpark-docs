@@ -1,0 +1,13 @@
+= Songpark system documentation
+
+Songpark is a system that allows people to play music in real time over great distances. It involves both software and hardware. By nature, the solution is complex with lots of moving, dependant parts.
+
+- xref:development.adoc[Development]
+- xref:deployment.adoc[Deployment]
+- xref:tests.adoc[Tests]
+- xref:secrets.adoc[Secrets]
+- xref:architecture.adoc[Architecture]
+- xref:adr.adoc[ADR]
+- xref:system-landscape.adoc[System landscape]
+- xref:logging.adoc[Logging]
+- xref:configuration.adoc[Configuration]

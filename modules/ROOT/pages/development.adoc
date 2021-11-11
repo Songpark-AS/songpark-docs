@@ -1,0 +1,13 @@
+= Development
+
+NOTE: This project is split up over many repos. Some aspects of HW development does not lend itself to text based VCS, such as git, and are backed up via manual routines.
+
+
+IMPORTANT: The following holds true.
+
+* https://chris.beams.io/posts/git-commit/[Commit messages] should be informative
+* https://google.github.io/eng-practices/review/reviewer/[Code reviews] are to be done
+
+== git-crypt
+
+A number of files holding various secrets, which are encrypted with git-crypt. See git-crypt under https://docs.inonit.no/d/docs/git to find out how to use it.

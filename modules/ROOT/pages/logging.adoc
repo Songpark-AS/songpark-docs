@@ -1,0 +1,30 @@
+= Logging
+
+Logging for any project should follow the standard industry practice of logging at different levels, and allowing for seperation of input and output. Log levels accepted in production should be INFO, WARN, ERROR and CRITICAL / FATAL.
+
+
+== Levels
+
+.TRACE
+
+Use when you need to see everthing that happens. Ideally commented out when not used, as it is by far the most spammy log level and you will drown in information.
+
+.DEBUG
+
+Use DEBUG for any debugging information. Fine if it's spammy.
+
+.INFO
+
+Should only be used for information that is important to log. Anything that falls under "I would like to informat that important thing x has happened" are good candiates for INFO.
+
+.WARN
+
+Use WARN where something unexpected is happening, and it really shouldn't. Basically, something happened that shouldn't have happened and it's kind of important to know it happened, but it's not an error.
+
+.ERROR
+
+Any error that is fatal to the operation at hand, but not the entire system/application.
+
+.CRITICAL / FATAL
+
+Only used for errors that forces a shutdown of a service/application in order to avoid data loss (or further data loss) or data corruption.

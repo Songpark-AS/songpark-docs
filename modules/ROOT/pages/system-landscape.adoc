@@ -1,0 +1,3 @@
+= System landscape
+
+As of yet undetermined, but 3rd party service providers will include payment processing and most likely include auth providers (Google, Facebook, etc) as well.

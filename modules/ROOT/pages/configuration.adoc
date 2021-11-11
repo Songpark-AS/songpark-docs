@@ -1,0 +1,7 @@
+= Configuration
+
+Configuration for any project should follow the following pattern.
+
+1. First round of configuration should come from an optional configuration file. The format of the file should follow what is common for the language that is to use for a configurationf file.
+2. The second round of configuration should come from ENVIRONMENT VARIABLES (EnvVar), if the environment the program operates in allows it. EnvVars should be able to override any configuration options in step 1. EnvVars are always optional.
+3. The third round of configuration should come from passing a manual configuration (optional) when starting the program. Step 3 should be able to override step 2 and step 1.
