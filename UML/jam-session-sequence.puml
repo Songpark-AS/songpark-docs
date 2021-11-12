@@ -1,0 +1,107 @@
+@startuml
+
+skinparam maxMessageSize 200
+
+User1 -> App1: I want to jam with my band
+App1 -> Platform: Start a new jam session with <BandID>
+Platform -> Platform: Start new jam
+Platform -> App1: Jam started, with id <jam-session-id>
+
+Platform -> TP1: A new jam is starting, with id <jam-sesion-id>
+TP1 -> Platform: ACK
+Platform -> TP2: A new jam is starting, with id <jam-sesion-id>
+TP2 -> Platform: ACK
+Platform -> TP3: A new jam is starting, with id <jam-sesion-id>
+TP3 -> Platform: ACK
+Platform -> TP4: A new jam is starting, with id <jam-sesion-id>
+TP4 -> Platform: ACK
+
+App1 -> MQ: Subscribe to topic jam/<jam-session-id>
+MQ -> App1: Ack
+TP1 -> MQ: Subscribe to topic jam/<jam-session-id>/teleporters
+MQ -> TP1: ACK
+TP2 -> MQ: Subscribe to topic jam/<jam-session-id>/teleporters
+MQ -> TP2: ACK
+TP3 -> MQ: Subscribe to topic jam/<jam-session-id>/teleporters
+MQ -> TP3: ACK
+TP4 -> MQ: Subscribe to topic jam/<jam-session-id>/teleporters
+MQ -> TP4: ACK
+
+' TP 1 to TP 2
+TP1 -> SIP: Give me details for calling TP2
+SIP -> TP1: Here are the details, including IP and ports
+TP1 -> TP2: Calling
+TP2 -> TP1: Call back
+TP1 -> App1: Call established with TP2
+TP2 -> App1: Call established with TP1
+TP1 -> TP2: Sync
+TP2 -> TP1: Sync
+TP1 -> App1: Sync established with TP2
+TP2 -> App1: Sync established with TP1
+
+' TP 1 to TP 3
+TP1 -> SIP: Give me details for calling TP3
+SIP -> TP1: Here are the details, including IP and ports
+TP1 -> TP3: Calling
+TP3 -> TP1: Call back
+TP1 -> App1: Call established with TP3
+TP3 -> App1: Call established with TP1
+TP1 -> TP3: Sync
+TP3 -> TP1: Sync
+TP1 -> App1: Sync established with TP3
+TP3 -> App1: Sync established with TP1
+
+' TP 1 to TP 4
+TP1 -> SIP: Give me details for calling TP4
+SIP -> TP1: Here are the details, including IP and ports
+TP1 -> TP4: Calling
+TP4 -> TP1: Call back
+TP1 -> App1: Call established with TP4
+TP4 -> App1: Call established with TP1
+TP1 -> TP4: Sync
+TP4 -> TP1: Sync
+TP1 -> App1: Sync established with TP4
+TP4 -> App1: Sync established with TP1
+
+' TP 2 to TP 3
+TP2 -> SIP: Give me details for calling TP3
+SIP -> TP2: Here are the details, including IP and ports
+TP2 -> TP3: Calling
+TP3 -> TP2: Call back
+TP2 -> App1: Call established with TP3
+TP3 -> App1: Call established with TP2
+TP2 -> TP3: Sync
+TP3 -> TP2: Sync
+TP2 -> App1: Sync established with TP3
+TP3 -> App1: Sync established with TP2
+
+' TP 2 to TP 4
+TP2 -> SIP: Give me details for calling TP4
+SIP -> TP2: Here are the details, including IP and ports
+TP2 -> TP4: Calling
+TP4 -> TP2: Call back
+TP2 -> App1: Call established with TP4
+TP4 -> App1: Call established with TP2
+TP2 -> TP4: Sync
+TP4 -> TP2: Sync
+TP2 -> App1: Sync established with TP4
+TP4 -> App1: Sync established with TP2
+
+' TP 3 to TP 4
+TP3 -> TP4: Calling
+TP3 -> SIP: Give me details for calling TP4
+SIP -> TP3: Here are the details, including IP and ports
+TP4 -> TP3: Call back
+TP3 -> App1: Call established with TP4
+TP4 -> App1: Call established with TP3
+TP3 -> TP4: Sync
+TP4 -> TP3: Sync
+TP3 -> App1: Sync established with TP4
+TP4 -> App1: Sync established with TP3
+
+App1 -> User1: We are ready to jam
+
+User1 -> User2: Can you hear me?
+User2 -> User1: Yes!
+
+@enduml

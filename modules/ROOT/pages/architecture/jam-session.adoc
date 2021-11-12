@@ -1,0 +1,28 @@
+= Jam session architecture
+
+== Jam session sequence
+
+.Drawing of the overall sequence in which things happen 
+image::UML/jam-session-sequence.png[Jam session sequence diagram]
+
+.User1
+The user that initiates the jam.
+
+.App1
+The app that User1 is using. Everything in the sequence diagram that happens to other apps are replicated across the apps.
+
+.Platform
+The backend that sets up a jam.
+
+.TP1 to TP4
+Each individual teleporter in a band. Each teleporter partakes in the jam session.
+
+.MQ
+The message broker (MQTT). When you see arrows of TP1 to App1 saying something is finished, it's over MQTT.
+
+.SIP
+The Kamailio server that each Teleporter talks with when making a call.
+
+.User2
+The owner of TP2, that responds to User1 at the end.
+
