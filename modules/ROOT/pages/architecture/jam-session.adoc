@@ -1,5 +1,80 @@
 = Jam session architecture
 
+== Jam lifecycle
+
+Each jam has a lifecycle, where it starts, things happen during the jam, and it is eventually stopped. This document is here to describe all of the things happening during a jam session, by different layers and in which order.
+
+In addition, this document lays out all the things that can go wrong in a normal jam session, and how each fault is supposed to be handled.
+
+=== Jam lifecycle App
+
+. Click start jam
+.. Send request to Platform
+.. Receive response from Platform with jam info
+.. Subscribe in MQ to <jam session id> as a topic
+.. Subscribe in MQ to <jam session id/app> as a topic
+. Respond to messages coming over the <jam session id> topic (MQ)
+.. Teleporters calling each other
+.. Teleporters synchronizing
+.. Show Teleporters leaving a jam
+.. Show Teleporters joining a jam
+.. Show Teleporters losing a call 
+. Send commands to all the teleporters in <jam session id/teleporters> topic
+. Send commands to the platform in <jam session id/platform> topic
+. Click stop jam
+.. Send message to <jam session id/platform>
+.. Receive response from Platform that a jam is in the process of stopping
+.. Receive message from Platform that the jam has now stopped
+
+
+=== Jam lifecycle Platform
+
+. Receive request from App to start a jam with a band
+. Start a jam session
+. Respond to App with a response, giving the jam info
+. Subscribe in MQ to <jam session id/platform>
+. Cycle through all Teleporters in the band
+.. For each Teleporter, tell the Teleporter to join a jam
+.. For each Teleporter, await a response and put it in into the jam session
+
+=== Jam lifecycle Teleporter
+
+. Receive message from Platform to join a jam
+. Start a local jam session (component that is handling the jam session on the Teleporter)
+. Subscribe in MQ to <jam session id/teleporters>
+. Each jam has an order to the teleporters
+.. Find the position of the current Teleporter
+.. Call each teleporter above the current Teleporter
+. Call Teleporter <x>
+.. Tell Kamailio (SIP server) to call Teleporter <x>
+.. Receive info on Teleporter <x>
+.. Teleporter <x> receives info on the calling Teleporter (ie, this Teleporter)
+.. Teleporter calls Teleporter <x>
+.. Teleporter publishes to <jam session id> that it's calling Teleporter <x>
+.. Teleporter <x> calls back
+.. Teleporter <x> published to <jam session id> that it's calling Teleporter
+. Stream
+.. Both Teleporters starts a stream towards each other
+.. Teleporter publish to <jam session id> that it's starting a stream to Teleporter <x>
+.. Teleporter <x> publish to <jam session id> that it's starting a stream to Teleporter
+.Synchronize
+.. Both Teleporters starts to synchronize towards each other
+.. Teleporter publish to <jam session id> that it's starting to synchornize with Teleporter <x>
+.. Teleporter <x> publish to <jam session id> that it's starting to synchronize with Teleporter
+. For each Teleporter in the jam, update jam session about the current status
+. Publish to <jam session id> a success phone call with Teleporter <x>
+. Receive a message on <jam session id/teleporters> to stop the jam
+.. In the same order as the call, do a hangup
+.. Publish to <jam session id> that the call with Teleporter <x> has now been hung up
+.. Once all calls are hung up, reset local jam session to idle
+
+
+== Idempotency
+
+All actions in a jam session has to be idempotent. Idemptonency is a property, in which operations can be applied multiple times without changing the result beyond the initial application.
+
+In practice, what this means, for example, is that when a user presses a button to start a jam, a Teleporter should not try and call another Teleporter twice, but only once. Since we are dealing with a number of layers that are basically state machines, this is entirely possible to do in the software. Care needs to be taken, to assure that actions are only carried out once.
+
 == Jam session sequence
 
 .Drawing of the overall sequence in which things happen 
@@ -26,3 +101,17 @@ The Kamailio server that each Teleporter talks with when making a call.
 .User2
 The owner of TP2, that responds to User1 at the end.
 
+== Jam session layers
+
+.Drawing of all the layers involved in a jam session
+image::songpark-jam-session.png[Jam session layers]
+
+. The App tells the Platform to start a jam with a band.
+. The Platform tells each Teleporter a jam has started.
+. The Platfor tells the App a jam has started with a specific jam session id.
+. The App subscribes to the jam session id as a topic on MQ.
+. Each Teleporter sends status updates on the jam session id as a topic on MQ.
+. In sequence, each Teleporter in the jam session starts calling Teleporters that are higher up in the sequence.
+. When calling, each Teleporter talks with Kamailio (SIP server) about finding details to talk with the other Teleporter.
+. Each Teleporter that gets called, calls back to the Teleporter calling them.
+. For each call established, a sync process happens where the Teleporters are synchronized.
