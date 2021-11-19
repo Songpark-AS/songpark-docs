@@ -1,0 +1,32 @@
+= Tools
+
+== rsync
+
+rsync is currently being used to upload, store and backup FPGA project files.
+
+=== Server details
+
+The rsync server is hosted on a lenovo mini pc located at the Inonit office.
+
+It is connected to the Wireguard VPN and has the following IP address on the VPN: `10.100.200.221`
+
+It has been configured to automatically backup to the S3 bucket: `rsync-server-backup` every day at 3AM (oslo time)
+
+=== How to synchronize a directory
+
+The credentials are located in the AWS parameter store under the key `/secret/rsync-server/credentials`
+
+IMPORTANT: In order to get the credentials you must have access to AWS and have setup https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html[aws-cli] on your computer.
+
+Use the tool https://github.com/grimdork/awsec[awsec] to get the credentials from the AWS parameter store.
+
+Run the following command to synchronize a local directory to the rsync server:
+
+NOTE: Replace "local_directory", "username" and "remote_directory" with correct values
+
+[source,bash]
+----
+rsync -a local_directory rsync://username@10.100.200.221:12000/files/remote_directory
+----
+
+You will be prompted to enter the password, do it and it should synchronize the local and remote directory

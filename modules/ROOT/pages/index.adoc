@@ -11,3 +11,4 @@ Songpark is a system that allows people to play music in real time over great di
 - xref:system-landscape.adoc[System landscape]
 - xref:logging.adoc[Logging]
 - xref:configuration.adoc[Configuration]
+- xref:tools.adoc[Tools]
