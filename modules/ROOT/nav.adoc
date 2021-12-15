@@ -7,3 +7,4 @@
 - xref:system-landscape.adoc[System landscape]
 - xref:logging.adoc[Logging]
 - xref:configuration.adoc[Configuration]
+- xref:tools.adoc[Tools]
