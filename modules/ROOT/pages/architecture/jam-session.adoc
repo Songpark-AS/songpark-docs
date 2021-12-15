@@ -73,7 +73,7 @@ In addition, this document lays out all the things that can go wrong in a normal
 
 All actions in a jam session has to be idempotent. Idemptonency is a property, in which operations can be applied multiple times without changing the result beyond the initial application.
 
-In practice, what this means, for example, is that when a user presses a button to start a jam, a Teleporter should not try and call another Teleporter twice, but only once. Since we are dealing with a number of layers that are basically state machines, this is entirely possible to do in the software. Care needs to be taken, to assure that actions are only carried out once.
+In practice, what this means, for example, is that when a user presses a button to start a jam, a Teleporter should not try and call another Teleporter twice, but only once. If, for whatever reason, this still happens, the second call should simply be treated as if though it was the first call, and not do anything beyond what a first call would have done. All layers that are basically state machines, easily do this kind of thing. Care needs to be taken, to assure that actions are only carried out once.
 
 == Jam session sequence
 
