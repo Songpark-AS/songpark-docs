@@ -3,5 +3,6 @@
 The architecture of Songpark is sprawling, and spans multiple environments.
 
 - xref:architecture/overview.adoc[Overview]
-- xref:architecture/jam-session.adoc[Jam session]
+- xref:architecture/jam-session.adoc[Jam session Lifecycle]
+- xref:architecture/jam-states.adoc[Jam session State transitions]
 

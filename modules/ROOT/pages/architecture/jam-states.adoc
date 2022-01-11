@@ -1,0 +1,199 @@
+= Jam session state transitions
+
+A jam is in a word complex. We break it down by xref::architecture/jam-session.adoc[Lifecycle] and state transitions.
+
+These are state transitions charts. They are to be read as the box being the state the application is in (which will make the application do things) and the arrows are transitions between states. An arrow can sometimes lead back to the same state.
+
+An application always transititions from one state to another by something changing. This causes a state transition where the application is now in a new state. While in a new state, the application now do more things, which can lead to further state changes. As such, the application moves from state to state, depending on input.
+
+== Teleporter state transitions
+
+image::songpark-jam-states-teleporter.png[Jam session State transitions Teleporter]
+
+On the teleporter, three layers are involved. TPX, SIP and FPGA. `TPX` corresponds to the Clojure application running on the Teleporter, SIP corresponds to the `connect` program and `FPGA` corresponds to the FPGA core running on the physical FPGA layer.
+
+=== Idle
+
+Default state of the TPX. Whenever something isn't happening, the TPX waits here.
+
+=== Starting
+
+TPX is starting up a jam session. This step involves getting all the involved participants in the jam, noting their SIP addresses and doing all necessary steps to start a jam.
+
+=== Subscribed
+
+Once a jam has been subscribed to on MQTT, the jam is ready to start.
+
+=== Prepare for calls
+
+In prepare for calls, Teleporter IDs are mapped to their respective SIP names.
+
+=== Calling
+
+At the SIP layer (inside the `connect` program and Kamailio), the Teleporter is calling another Teleporter. In this step IP and ports are determined by the SIP layer.
+
+=== Synchronize
+
+Once a call has been established, the FPGA synchronizes the two Teleporters so that they are in sync.
+
+
+=== Start stream
+
+Once the FPGA cores are synchronized, the FPGA starts streaming audio to the other teleporter.
+
+
+=== Jam error
+
+One stop shop for handling errors in a jam session on the Teleporter. Depending on the fault different actions are taken.
+
+
+=== In progress
+
+Once all participants in a jam session has joined, the Teleporter is now in the state called in progress. This is the idle state for an ongoing jam, where the Teleporter waits for new commands.
+
+=== Local recording
+
+Local recording is started or stopped. When in this state, the TPX handles all the required stuff with regards to recording.
+
+=== Mutli recording
+
+Multi recording is started or stopped. When in this state, the TPX handles all the required stuff with regards to recording.
+
+
+=== Stopping
+
+When in this state, TPX initates a shutdown of the entire jam session in order to clean up all the state and get back to a known state in idle.
+
+=== Prepare for stopping calls
+
+Reverse what was done in Prepare for calls.
+
+=== Hangup
+
+Hangup the call with each Teleporter. This happens on the SIP layer (involves the `connect` program and Kamailio).
+
+=== Stop stream
+
+At the FPGA layer stop the stream towards the other Teleporter.
+
+=== Stopped
+
+Make sure that each call has indeed hung up and no streams are ongoing. In the event something is still going, go through the loop again in order to shut down the streaming.
+
+
+=== Unsubscribed
+
+Make sure we are unsubscribed from the jam MQTT topic.
+
+
+== Platform state transitions
+
+image::songpark-jam-states-platform.png[Jam session State transitions Platform]
+
+
+=== Idle
+
+Default state of the Platform. Whenever something isn't happening, the Platform waits here.
+
+=== Starting
+
+Prepares which participants are supposed to participate in the jam. Decide on a Jam session ID.
+
+=== Subscribed
+
+Subscribed to the MQTT jam session id topic.
+
+=== Invitations
+
+Prepare data for each participant to join the jam and send it out via MQTT.
+
+=== Invite to jam
+
+On the Teleporter, at the TPX level, join the jam.
+
+=== Error
+
+Error handling for the Platform regarding any errors that occur on the Platform level that Platform needs to handle.
+
+=== In progress
+
+We have an ongoing jam. Idle state for ongoing jam, with the Platform waiting for input.
+
+=== Stopping
+
+Initiate a stop of a jam for all participants.
+
+=== Waiting for conformation stops
+
+Wait for the Teleporter to inform the Platform that it has stopped all activity regarding the jam and is now leaving the jam.
+
+==== Cleanup
+
+In the event that not everything was shut down cleanly, have Platform initiate tasks to cleanup the Teleporter. This can involve forcibly stopping streaming, forcibly resetting Teleporter to a clean slate, etc.
+
+=== Stopped
+
+All participants have now stopped successfully.
+
+=== Unsubscribed
+
+Make sure we are unsubscribed from the Jam session ID topic on MQTT, so that the MQTT server can claim back its resources.
+
+
+== App state transitions
+
+image::songpark-jam-states-app.png[Jam session State transitions App]
+
+
+=== Idle
+
+Default state of the App. Whenever something isn't happening, the App waits here.
+
+=== Starting
+
+A button was pressed to start a jam session. Initiate the jam by asking the Platform to start a jam with x members.
+
+=== Initilization
+
+We have a reply from Platform with info on the jam. Initiate the jam visually.
+
+=== Subscribed
+
+We have successfully subscribed to the MQTT jam session id topic.
+
+=== Waiting for participants
+
+We show a visual view of all participants, and whether they have joined the jam successfully or not.
+
+=== In progress
+
+The jam is running. This is the idle state for an ongoing jam session.
+
+
+=== Handle command
+
+You can run commands against the Teleporter from the App during a jam session. Examples includes volume settings and playout delay.
+
+=== Waiting for conformation
+
+Visually show that you yourself are leaving the jam.
+
+=== Stopping (app)
+
+Initiate a stop of the jam.
+
+=== Stopping (platform)
+
+Initiate a stop of the jam.
+
+=== Waiting for participants
+
+Visually show that a Teleporter is leaving the jam session, but has not yet left.
+
+=== Stopped
+
+The jam has stopped for the Teleporter that is paired with this App.
+
+=== Unsubscribed
+
+Make sure we are unsubscribed from the MQTT jam session ID topic.

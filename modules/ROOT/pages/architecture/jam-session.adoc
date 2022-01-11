@@ -46,28 +46,53 @@ In addition, this document lays out all the things that can go wrong in a normal
 .. Find the position of the current Teleporter
 .. Call each teleporter above the current Teleporter
 . Call Teleporter <x>
+.. Teleporter fails to call Teleporter <x>
+... Jam error
 .. Tell Kamailio (SIP server) to call Teleporter <x>
+... Call fails -> Jam error
 .. Receive info on Teleporter <x>
 .. Teleporter <x> receives info on the calling Teleporter (ie, this Teleporter)
 .. Teleporter calls Teleporter <x>
 .. Teleporter publishes to <jam session id> that it's calling Teleporter <x>
 .. Teleporter <x> calls back
 .. Teleporter <x> published to <jam session id> that it's calling Teleporter
+. Synchronize
+.. Teleporter fails to synchronize
+... Jam error
+.. Both Teleporters starts to synchronize towards each other
+.. Teleporter publish to <jam session id> that it's starting to synchornize with Teleporter <x>
+.. Teleporter <x> publish to <jam session id> that it's starting to synchronize with Teleporter
 . Stream
+.. Stream failed
+... Jam error
 .. Both Teleporters starts a stream towards each other
 .. Teleporter publish to <jam session id> that it's starting a stream to Teleporter <x>
 .. Teleporter <x> publish to <jam session id> that it's starting a stream to Teleporter
-.Synchronize
+. Synchronize
 .. Both Teleporters starts to synchronize towards each other
 .. Teleporter publish to <jam session id> that it's starting to synchornize with Teleporter <x>
 .. Teleporter <x> publish to <jam session id> that it's starting to synchronize with Teleporter
 . For each Teleporter in the jam, update jam session about the current status
 . Publish to <jam session id> a success phone call with Teleporter <x>
+. Teleporter receives command to start/stop local recording
+.. Teleporter fails to start recording
+... This is reported somewhere (TBD)
+.. Teleporter starts/stops recording locally
+. Teleporter receives command to start/stop multirecording
+.. Teleporter fails to start multirecording
+... This is reported somewhere (TBD)
+.. Teleporter starts/stops multirecording
+. A teleporter leaves the ongoing jam
+.. The teleporter that leaves the jam does the stopping procedure as normal
+.. The remaining teleporters in the jam stops streaming to the teleporter leaving and remains in the ongoing jam
 . Receive a message on <jam session id/teleporters> to stop the jam
 .. In the same order as the call, do a hangup
 .. Publish to <jam session id> that the call with Teleporter <x> has now been hung up
 .. Once all calls are hung up, reset local jam session to idle
 
+==== Jam error
+
+In this state the teleporter will try to re-initiate a number of times depending on what kind of error occurred, if it is unsuccessfull it will give up, report the error to the other teleporters in the jam if possible and continue the jam session in an undesireable state.
 
 == Idempotency
 
