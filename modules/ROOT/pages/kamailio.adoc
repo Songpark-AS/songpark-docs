@@ -1,0 +1,56 @@
+= Kamailio
+
+== Introduction
+Kamailio runs (in its present configuration) on voip1.inonit.no, which is a "standalone" server on AWS. The hardware runs:
+ 
+ * Kamailio
+ * Turnserver
+ * Wireguard 
+
+== Configuration
+
+=== Turnserver.
+The turnserver provides service for STUN and ICE-enabled clients. It basically provides the client with awareness of its own external ip address. Not used by the prototype. The only setting is in *+/etc/turnserver.conf.+*
+
+
+=== Wireguard
+Wireguard facilitates communication between developers and units and is strictly not necessary in the long run. There is also no reason to run it on the voip server. Settings are in *+/etc/wireguard/wg0.conf+*
+
+=== Kamailio
+Kamailio is the SIP server that is used by the clients to set up sessions. It is compiled from source. 
+
+==== Configuration files
+Config: */etc/kamailio/* (various files). In its current configuration the main configuration file is split (to make it smaller) into several files. However, in its original form there would basically be only kamctlrc and kamailio.cfg.
+
+==== Database
+
+Mariadb using database 'kamailio'. Users: 'kamailio' (rw) and 'kamailioro' (ro). The database can be edited with 'kamctl', but adding or deleting users is easy by just changing the content of the subscriber table.
+
+.Compile info:
+[source,perl]
+----
+root@ip-10-0-2-70-voip1:/etc/kamailio# kamailio -I
+Print out of kamailio internals
+  Version: kamailio 5.4.3 (x86_64/linux) 06bd17
+  Default config: /usr/local/etc/kamailio/kamailio.cfg
+  Default paths to modules: /usr/local/lib64/kamailio/modules
+  Compile flags: USE_TCP, USE_TLS, USE_SCTP, TLS_HOOKS, USE_RAW_SOCKS, DISABLE_NAGLE, USE_MCAST, DNS_IP_HACK, SHM_MMAP, PKG_MALLOC, Q_MALLOC, F_MALLOC, TLSF_MALLOC, DBG_SR_MEMORY, USE_FUTEX, FAST_LOCK-ADAPTIVE_WAIT, USE_DNS_CACHE, USE_DNS_FAILOVER, USE_NAPTR, USE_DST_BLACKLIST, HAVE_RESOLV_RES, TLS_PTHREAD_MUTEX_SHARED
+  MAX_RECV_BUFFER_SIZE=262144
+  MAX_URI_SIZE=1024
+  BUF_SIZE=65535
+  DEFAULT PKG_SIZE=8MB
+  DEFAULT SHM_SIZE=64MB
+  ADAPTIVE_WAIT_LOOPS=1024
+  TCP poll methods: poll, epoll_lt, epoll_et, sigio_rt, select
+  Source code revision ID: 06bd17 
+  Compiled with: gcc 8.3.0
+  Compiled architecture: x86_64
+  Compiled on: 22:06:54 Jan 18 2021
+Thank you for flying kamailio!
+----
+
+==== How to use
+*+systemctl restart kamailio+* will restart kamailio, necessary after config file changes.
+
+*+kamctl+* can do tasks like adding or deleting users, list online users etc. 
+
