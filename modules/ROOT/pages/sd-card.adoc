@@ -1,0 +1,11 @@
+= SD card HowTo
+
+== Introduction
+
+This document will cover verious ways to copy and manipulate SD cards. Any examples are performed on an Ubuntu computer. 
+
+SD cards are, like hard disks, divided into sectors. We have to know the card's sector size in order to do meaningful calculations. The first sector is sector 0, so if the "end sector" is, say, 15564799, then the sector count is 15564799+1, which is 15564800. 
+
+== fdisk
+Let's start with an SD card we put in our reader. In the Linux termincal, we type [source,ruby] sudo fdisk -l /dev/mmcblk0
+
