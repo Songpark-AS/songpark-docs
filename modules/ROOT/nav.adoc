@@ -9,3 +9,4 @@
 - xref:configuration.adoc[Configuration]
 - xref:tools.adoc[Tools]
 - xref:kamailio.adoc[Kamailio (SIP)]
+- xref:sd-card.adoc[SD Card howto]
