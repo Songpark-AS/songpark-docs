@@ -1,11 +1,192 @@
 = SD card HowTo
+:icons: font
 
 == Introduction
+
 
 This document will cover verious ways to copy and manipulate SD cards. Any examples are performed on an Ubuntu computer. 
 
 SD cards are, like hard disks, divided into sectors. We have to know the card's sector size in order to do meaningful calculations. The first sector is sector 0, so if the "end sector" is, say, 15564799, then the sector count is 15564799+1, which is 15564800. 
 
-== fdisk
-Let's start with an SD card we put in our reader. In the Linux termincal, we type [source,ruby] sudo fdisk -l /dev/mmcblk0
+== TLDR: How to write a complete SD card from an image file
+ dd if=<filename.img> of=/dev/mmcblk0 bs=512 status=progress
 
+In this example, the SD card is /dev/mmcblk0. It may be different on your system!
+
+== TLDR 2: How to create an image file from an SD card
+ dd if=/dev/mmcblk0 bs=512 of=<filename.img> status=progress
+
+[NOTE]
+Copying a whole card can take a very long time!
+
+== Get information about our card
+.Let's start with an SD card we put in our reader. In the Linux termincal, we type 
+
+`sudo fdisk -l /dev/mmcblk0`
+
+This will give us information about the card at /dev/mmcblk0. The name may be differen on your computer.
+
+Now let us try with a real card:
+
+
+ sudo fdisk -l /dev/mmcblk0
+ Disk /dev/mmcblk0: 57.74 GiB, 61983424512 bytes, 121061376 sectors
+ Units: sectors of 1 * 512 = 512 bytes
+ Sector size (logical/physical): 512 bytes / 512 bytes
+ I/O size (minimum/optimal): 512 bytes / 512 bytes
+ Disklabel type: dos
+ Disk identifier: 0x23b49f31
+    
+ Device         Boot  Start      End  Sectors  Size Id Type
+ /dev/mmcblk0p1 *      8192   532479   524288  256M  b W95 FAT32
+ /dev/mmcblk0p2      532480 15564799 15032320  7.2G 83 Linux
+
+What we can read from this is that the card is a 64GB card, of which only around 8GB are used. We see that the sector size is 512, so we need to keep this in mind. If we were to create an image file based on this physical card, it would be a waste of time to copy the whole card (which is 8 GB of actual partitions and 56 GB of empty space). We see that the end sector is *15564799*. Since the first sector is *0*, we add 1 and end up with *15564800*. 
+
+
+== Create image file using dd
+Using that number, in order to create an image file, we can use the following command: 
+
+ dd if=/dev/mmcblk0 bs=512 count=15564800 of=myimg.img status=progress
+
+
+[TIP]
+By using the 'count' directive, we stop the writing process when we have read the last sector of the card. This way, we can avoid copying gigabytes upon gigabytes of empty data!
+
+
+
+
+== Mount image file as a drive
+So now we have an image that we can either copy to other cards, or we can mount it on our local computer and make changes to the image itself. 
+
+First we have to find the first free loop device: 
+ losetup -f
+ sudo losetup -f
+ /dev/loop44
+
+Loop44 is free and can be used for our purposes: 
+
+ sudo losetup /dev/loop44 myimg.img
+
+Also, we have to inform our operating system of the partitions: 
+
+ sudo partprobe /dev/loop44
+
+We can now operate on the loop device: 
+
+ sudo mount /dev/loop44p1 bootpartition
+ sudo mount /dev/loop44p2 rootpartition
+
+These commands will mount the two partitions under the folders *bootpartition* and *rootpartition*, respectively.
+
+
+[CAUTION]
+Any changes made inside the mounted folders will be written to the image file.
+
+== Partially copy (copy only one partition)
+
+This can be useful if we only want to replace a single partition in order to save time. 
+
+ - Use dd to copy the partition (after losetup and partprobe as shown above): 
+
+ 
+ sudo dd if=/dev/loop44p2 of=/dev/mmcblk0p2 bs=512 conv=notrunc,noerror status=progress
+
+This will copy the second partition of the image file to the second partition on the SD card /dev/mmcblk0.
+
+[CAUTION]
+This will reset all config files that are stored on this partition, e.g. `/etc/wireguard/`, etc.  
+
+****
+[TIP]
+If the last partition in an image is small, creating the SD card will be quicker. After the creation of the card, the last partition can be easily enlarged. While it sounds brutal to delete the partition and then recreate, the idea is that the data survives the deletion and recreation of the partition table. So, let's start!
+****
+
+== Resizing (the last) partition
+
+Steps: 
+
+<1> Run fdisk
+<2> Delete partition
+<3> Create new, bigger partition at the same location
+<4> Write (save) the partition table
+<5> Resize the file system on the new partition
+-----------------------------------
+Start fdisk and read out the partition table: 
+
+ sudo fdisk /dev/mmcblk0  <1>
+
+
+
+ Welcome to fdisk (util-linux 2.34).
+ Changes will remain in memory only, until you decide to write them.
+ Be careful before using the write command.
+
+Print out the current partition table with command 'p'
+
+ Command (m for help): p
+ Disk /dev/mmcblk0: 59.49 GiB, 63864569856 bytes, 124735488 sectors
+ Units: sectors of 1 * 512 = 512 bytes
+ Sector size (logical/physical): 512 bytes / 512 bytes
+ I/O size (minimum/optimal): 512 bytes / 512 bytes
+ Disklabel type: dos
+ Disk identifier: 0x23b49f31
+
+ Device         Boot   Start      End  Sectors  Size Id Type
+ /dev/mmcblk0p1 *       8192   532479   524288  256M  b W95 FAT32
+ /dev/mmcblk0p2       532480  8921087  8388608    4G 83 Linux
+ /dev/mmcblk0p3      8921088  9945087  1024000  500M 83 Linux
+ /dev/mmcblk0p4      9945088 31115263 21170176 10.1G 83 Linux
+
+Delete partition 4: <2> 
+
+ Command (m for help): d
+ Partition number (1-4, default 4): 4
+
+ Partition 4 has been deleted.
+
+ - Create new partition: <3>
+
+ Command (m for help): n
+ Partition type
+   p   primary (3 primary, 0 extended, 1 free)
+   e   extended (container for logical partitions)
+ Select (default e): p
+
+ Selected partition 4
+ First sector (2048-124735487, default 2048): 9945088
+ Last sector, +/-sectors or +/-size{K,M,G,T,P} (9945088-124735487, default 124735487): 
+
+ Created a new partition 4 of type 'Linux' and of size 54.8 GiB.
+ Partition 4 contains a ext4 signature.
+
+ Do you want to remove the signature? [Y]es/[N]o: n
+
+ Command (m for help): p
+
+ Disk /dev/mmcblk0: 59.49 GiB, 63864569856 bytes, 124735488 sectors
+ Units: sectors of 1 * 512 = 512 bytes
+ Sector size (logical/physical): 512 bytes / 512 bytes
+ I/O size (minimum/optimal): 512 bytes / 512 bytes
+ Disklabel type: dos
+ Disk identifier: 0x23b49f31
+
+ Device         Boot   Start       End   Sectors  Size Id Type
+ /dev/mmcblk0p1 *       8192    532479    524288  256M  b W95 FAT32
+ /dev/mmcblk0p2       532480   8921087   8388608    4G 83 Linux
+ /dev/mmcblk0p3      8921088   9945087   1024000  500M 83 Linux
+ /dev/mmcblk0p4      9945088 124735487 114790400 54.8G 83 Linux
+
+ - Save the new partition table with command 'w': <4>
+
+ Command (m for help): w
+ The partition table has been altered.
+ Syncing disks.
+
+ tar@tar-Latitude-E7470:~$ sudo resize2fs /dev/mmcblk0p4 <5>
+ resize2fs 1.45.5 (07-Jan-2020)
+ Filesystem at /dev/mmcblk0p4 is mounted on /media/tar/736e330f-786e-46d5-9e65-3ac30ae8753b; on-line resizing required
+ old_desc_blocks = 1, new_desc_blocks = 4
+ The filesystem on /dev/mmcblk0p4 is now 14348800 (4k) blocks long.
+
+-----------------------------------
