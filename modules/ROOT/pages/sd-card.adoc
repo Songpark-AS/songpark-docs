@@ -106,6 +106,8 @@ If the last partition in an image is small, creating the SD card will be quicker
 
 Steps: 
 
+[start=1]
+
 <1> Run fdisk
 <2> Delete partition
 <3> Create new, bigger partition at the same location
@@ -114,9 +116,8 @@ Steps:
 -----------------------------------
 Start fdisk and read out the partition table: 
 
- sudo fdisk /dev/mmcblk0  <1>
-
-
+<1>
+ sudo fdisk /dev/mmcblk0   
 
  Welcome to fdisk (util-linux 2.34).
  Changes will remain in memory only, until you decide to write them.
@@ -138,14 +139,16 @@ Print out the current partition table with command 'p'
  /dev/mmcblk0p3      8921088  9945087  1024000  500M 83 Linux
  /dev/mmcblk0p4      9945088 31115263 21170176 10.1G 83 Linux
 
-Delete partition 4: <2> 
+<2> 
+Delete partition 4:  
 
  Command (m for help): d
  Partition number (1-4, default 4): 4
 
  Partition 4 has been deleted.
 
- - Create new partition: <3>
+<3>
+ - Create new partition: 
 
  Command (m for help): n
  Partition type
@@ -177,13 +180,15 @@ Delete partition 4: <2>
  /dev/mmcblk0p3      8921088   9945087   1024000  500M 83 Linux
  /dev/mmcblk0p4      9945088 124735487 114790400 54.8G 83 Linux
 
- - Save the new partition table with command 'w': <4>
+<4> 
+ - Save the new partition table with command 'w': 
 
  Command (m for help): w
  The partition table has been altered.
  Syncing disks.
 
- tar@tar-Latitude-E7470:~$ sudo resize2fs /dev/mmcblk0p4 <5>
+<5> 
+ tar@tar-Latitude-E7470:~$ sudo resize2fs /dev/mmcblk0p4   
  resize2fs 1.45.5 (07-Jan-2020)
  Filesystem at /dev/mmcblk0p4 is mounted on /media/tar/736e330f-786e-46d5-9e65-3ac30ae8753b; on-line resizing required
  old_desc_blocks = 1, new_desc_blocks = 4

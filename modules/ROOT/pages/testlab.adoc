@@ -1,0 +1,73 @@
+= Test lab intro
+The test lab will run as a standalone network, but it can also be connected to the internet, with some tweaking.
+
+- 2 Teleporters
+- Linux computer with bridge. 
+- 2 USB network cards
+
+After reboot, run the script ~/bridgestart.sh (which contains the following): 
+
+ sudo brdtl addbr br0
+ sudo brctl addif br0 enx00e04c684566
+ sudo brctl addif br0 enx00e04c68451e
+ sudo ip link set br0 up
+ sudo ip a add 10.3.3.3/24 dev br0
+ sudo systemctl restart isc-dhcp-server.service
+ sudo echo 1 > /proc/sys/net/ipv4/ip_forward
+
+DHCP leases will be in /var/lib/dhcp/dhcpd.leases.
+DHCP config in /etc/dhcp/dhcpd.conf
+
+== Adding packet loss
+You need to know which interface to manipulate. One option is to run 100% packet loss on each interface to see which will interfere with network traffic:
+
+ sudo tc qdisc add (or change) dev enx00e04c684566 root netem delay 1ms loss 100%. 
+
+If this has no effect, use enx00e04c68451e. 
+
+Don't forget to delete it: 
+
+ sudo tc qdisc del dev enx00e04c684566 root
+
+Another example: 
+
+  sudo tc qdisc change dev enx00e04c68451e root netem delay 1 ms loss state 0.0 1.0 0.0 0 10%
+
+== Updating Teleporter
+When I receive a new kernel, I create a folder (on my computer) named boot_<date>, e.g. boot_2022-03-31. I rename the connect files so that I have connect_nosip_2022-03-31 and connect_sip_2022-03-31. If this release comes without devicetree.dtb and uImage, I copy these from the previous version, so that I always have a full set of necessary files inside the boot_<date> folder.
+
+Prepare the Teleporter: 
+The boot partition is not mounted, so mount it with the command mount /dev/mmcblk0p1 /boot
+
+From your computer, upload the whole boot_<date> folder to the /boot folder on the teleporter:
+
+ scp -rp boot_2022-03-31 root@10.100.200.108:/boot/
+
+
+On each teleporter, cd to the new /boot/boot_<date> folder and copy BOOT.bin, devicetree.dtb and uImage to the parent folder: 
+
+ cp BOOT.bin devicetree.dtb uImage ..
+
+Copy the connect files to /usr/local/bin:
+
+ cp connect_* /usr/local/bin/
+
+Reboot.
+
+== Running the connect app in lab mode
+
+In the /root folder, run
+
+ ./connect_lab.sh connect_nosip_2022-03-31 10.3.3.100 on Elvis and
+ ./connect_lab.sh connect_nosip_2022-03-31 10.3.3.102 on Beatles.
+
+
+== Teleporter commandline
+ sync (Do this on one Teleporter)
+ start (Do this on both)
+ delay 7 (sets playout delay 7)
+ gettc (gets infomation about dropped packets)
+
+vol <number> (sets overall volume (default is 12))
+vll <number> and vlr <number> (set left and right loopback volume)
+netvoll <number> and netvolr <number> (set network volume)
