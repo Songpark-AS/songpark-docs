@@ -10,3 +10,4 @@
 - xref:tools.adoc[Tools]
 - xref:kamailio.adoc[Kamailio (SIP)]
 - xref:sd-card.adoc[SD Card howto]
+- xref:testlab.adoc[Test lab blues]
